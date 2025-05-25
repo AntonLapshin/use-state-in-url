@@ -1,5 +1,7 @@
 # use-state-in-url
 
+[![minified + gzip](https://badgen.net/bundlephobia/minzip/use-state-in-url)](https://bundlephobia.com/result?p=use-state-in-url) [![dependencies](https://badgen.net/bundlephobia/dependency-count/use-state-in-url)](https://bundlephobia.com/result?p=use-state-in-url)
+
 `use-state-in-url` is a small React utility that stores state in the URL query string. It works like `useState` but allows your users to share deep links and navigate back and forward through application state.
 
 This package has **zero dependencies** and you can try it live on the [demo website](https://antonlapshin.github.io/use-state-in-url/).
