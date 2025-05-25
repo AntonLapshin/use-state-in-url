@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>use-state-in-url Demo</title>
+  <style>
+    html, body { margin:0; padding:0; background:#000; color:#ddd; font-family: monospace; scroll-behavior:smooth; }
+    nav { background:#111; padding:0.5rem 1rem; display:flex; justify-content:space-between; position:sticky; top:0; }
+    nav a { color:#ddd; text-decoration:none; margin-right:1rem; }
+    nav a:hover { text-decoration:underline; }
+    section { padding:1rem; }
+    input, button { background:#111; color:#ddd; border:1px solid #555; padding:0.25rem; margin:0.25rem 0; font-family:inherit; }
+    pre { background:#111; padding:1rem; overflow-x:auto; }
+    button { cursor:pointer; }
+    h1 { margin-top:0; color:#ddd; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div>
+      <a href="#demo">Demo</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div>
+      <a href="https://github.com/">GitHub</a>
+      <a href="https://www.npmjs.com/package/use-state-in-url">npm</a>
+    </div>
+  </nav>
+
+  <section id="demo">
+    <h1 style="font-size:3rem;">useStateInUrl</h1>
+    <div id="app"></div>
+  </section>
+
+  <section id="docs">
+    <h1>Documentation</h1>
+    <pre>
+use-state-in-url is a small React utility that stores state in the
+URL query string. It works like useState but allows your users to
+share deep links and navigate back and forward through application
+state.
+    </pre>
+    <h2>Basic Usage</h2>
+    <pre><code>
+import { useStateInUrl } from 'use-state-in-url';
+
+function Search({ location, navigate }) {
+  const [term, setTerm] = useStateInUrl('term', { location, navigate });
+
+  return (
+    &lt;input value={term} onChange={e =&gt; setTerm(e.target.value)} /&gt;
+  );
+}
+    </code></pre>
+    <h2>Supported Types</h2>
+    <pre><code>
+const [page, setPage] = useStateInUrl&lt;number&gt;({ name: 'page', type: 'number', defaultValue: 1 }, opts);
+const [active, setActive] = useStateInUrl&lt;boolean&gt;({ name: 'active', type: 'boolean', defaultValue: false }, opts);
+const [tags, setTags] = useStateInUrl&lt;string[]&gt;({ name: 'tags', type: 'array', defaultValue: [] }, opts);
+const [filters, setFilters] = useStateInUrl&lt;Record&lt;string, unknown&gt;&gt;({ name: 'filters', type: 'object', defaultValue: {} }, opts);
+    </code></pre>
+    <h2>Creating a Wrapper Hook</h2>
+    <pre><code>
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useStateInUrl } from 'use-state-in-url';
+
+export function useStateInRouter&lt;T&gt;(param: string | StateParam&lt;T&gt;) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return useStateInUrl(param, { navigate: url =&gt; navigate(url), location });
+}
+    </code></pre>
+    <h2>Batch Updates</h2>
+    <pre><code>
+const { batchUpdate } = useBatchUpdate(opts);
+
+const apply = () => {
+  batchUpdate([
+    setTerm('hello'),
+    setPage(2)
+  ]);
+};
+    </code></pre>
+  </section>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script>
+  const { useState, useEffect, useRef, useCallback } = React;
+
+  function parseQueryString(location) {
+    const queryString = location.search.startsWith('?') ? location.search.substring(1) : location.search;
+    const pairs = queryString.split('&').filter(p => p);
+    const map = new Map();
+    pairs.forEach(pair => {
+      const [key, value] = pair.split('=');
+      if (key) map.set(key, value);
+    });
+    return map;
+  }
+
+  function createQueryString(searchParams) {
+    const pairs = [];
+    for (const [key, value] of searchParams) {
+      pairs.push(key + '=' + value);
+    }
+    return pairs.join('&');
+  }
+
+  const Deserializers = {
+    string: v => decodeURIComponent(v),
+    number: v => Number(v),
+    boolean: v => v.toLowerCase() === 'true',
+    object: v => { try { return JSON.parse(decodeURIComponent(v)); } catch (e) { return {}; } },
+    array: v => v.split(',').map(x => decodeURIComponent(x))
+  };
+
+  const Serializers = {
+    string: v => v,
+    number: v => v.toString(),
+    boolean: v => (v ? 'true' : 'false'),
+    object: v => encodeURIComponent(JSON.stringify(v)),
+    array: v => v.join(',')
+  };
+
+  function deepEqual(a, b) {
+    if (a === b) return true;
+    if (typeof a !== typeof b) return false;
+    if (typeof a !== 'object' || a === null || b === null) return false;
+    const aKeys = Object.keys(a);
+    const bKeys = Object.keys(b);
+    if (aKeys.length !== bKeys.length) return false;
+    for (const key of aKeys) {
+      if (!deepEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  function getUrlParam(param, location, defaultValue) {
+    const searchParams = parseQueryString(location);
+    const urlParam = typeof param === 'string'
+      ? { name: param, type: 'string', defaultValue: defaultValue.current }
+      : param;
+    const urlValue = searchParams.get(urlParam.name);
+    if (urlValue === undefined || urlValue === null) {
+      urlParam.currentValue = defaultValue.current;
+    } else {
+      urlParam.currentValue = Deserializers[urlParam.type](urlValue);
+    }
+    return urlParam;
+  }
+
+  function useStateInUrl(param, opts) {
+    const { location, navigate } = opts;
+    const locationRef = useRef(location);
+    const defaultValue = useRef(typeof param === 'string' ? undefined : param.defaultValue);
+    const urlParam = getUrlParam(param, location, defaultValue);
+    const [value, setValue] = useState(urlParam.currentValue);
+
+    useEffect(() => {
+      const newParam = getUrlParam(param, opts.location, defaultValue);
+      if (!deepEqual(newParam.currentValue, value)) {
+        setValue(newParam.currentValue);
+      }
+      locationRef.current = opts.location;
+    }, [opts.location.search, opts.location.pathname]);
+
+    const mutateValue = useCallback(newValue => searchParams => {
+      setValue(newValue);
+      if (newValue === undefined) {
+        searchParams.delete(urlParam.name);
+      } else {
+        const serializer = Serializers[urlParam.type];
+        searchParams.set(urlParam.name, serializer(newValue));
+      }
+      return searchParams;
+    }, [urlParam.name, urlParam.type]);
+
+    const update = useCallback(newValue => {
+      const searchParams = parseQueryString(locationRef.current);
+      const newSearchParams = mutateValue(newValue)(searchParams);
+      const newQueryString = createQueryString(newSearchParams);
+      navigate(locationRef.current.pathname + '?' + newQueryString);
+    }, [mutateValue, navigate]);
+
+    return [value, update, mutateValue];
+  }
+
+  function useBatchUpdate(opts) {
+    const { location, navigate } = opts;
+    const locationRef = useRef(location);
+
+    useEffect(() => {
+      locationRef.current = location;
+    }, [location.search, location.pathname]);
+
+    const batchUpdate = useCallback((updates, includeExisting = true, replacePath) => {
+      let searchParams = new Map();
+      if (includeExisting) {
+        searchParams = parseQueryString(locationRef.current);
+      }
+      const newSearchParams = updates.reduce((acc, update) => update(acc), searchParams);
+      const newQueryString = createQueryString(newSearchParams);
+      if (replacePath) {
+        navigate(replacePath + '?' + newQueryString);
+      } else {
+        navigate('?' + newQueryString);
+      }
+    }, [navigate]);
+
+    return { batchUpdate };
+  }
+
+  function useBrowserHistory() {
+    const [loc, setLoc] = useState({ pathname: window.location.pathname, search: window.location.search });
+
+    useEffect(() => {
+      const onPop = () => setLoc({ pathname: window.location.pathname, search: window.location.search });
+      window.addEventListener('popstate', onPop);
+      return () => window.removeEventListener('popstate', onPop);
+    }, []);
+
+    const navigate = useCallback(url => {
+      window.history.pushState({}, '', url);
+      setLoc({ pathname: window.location.pathname, search: window.location.search });
+    }, []);
+
+    return { location: loc, navigate };
+  }
+
+  function Demo() {
+    const { location, navigate } = useBrowserHistory();
+    const [term, setTerm, mutateTerm] = useStateInUrl('term', { location, navigate });
+    const [page, setPage, mutatePage] = useStateInUrl({ name: 'page', type: 'number', defaultValue: 1 }, { location, navigate });
+    const [active, setActive, mutateActive] = useStateInUrl({ name: 'active', type: 'boolean', defaultValue: false }, { location, navigate });
+    const [tags, setTags, mutateTags] = useStateInUrl({ name: 'tags', type: 'array', defaultValue: [] }, { location, navigate });
+    const [filters, setFilters, mutateFilters] = useStateInUrl({ name: 'filters', type: 'object', defaultValue: {} }, { location, navigate });
+    const { batchUpdate } = useBatchUpdate({ location, navigate });
+
+    const handleBatch = () => {
+      batchUpdate([
+        mutateTerm('hello'),
+        mutatePage(page + 1),
+        mutateActive(!active)
+      ]);
+    };
+
+    return React.createElement('div', null,
+      React.createElement('div', null,
+        'term: ', React.createElement('input', { value: term || '', onChange: e => setTerm(e.target.value) })
+      ),
+      React.createElement('div', null,
+        'page: ', React.createElement('input', { type: 'number', value: page, onChange: e => setPage(Number(e.target.value)) })
+      ),
+      React.createElement('div', null,
+        'active: ', React.createElement('input', { type: 'checkbox', checked: active, onChange: e => setActive(e.target.checked) })
+      ),
+      React.createElement('div', null,
+        React.createElement('button', { onClick: () => setTags(['tag1', 'tag2']) }, 'Set Tags')
+      ),
+      React.createElement('div', null,
+        React.createElement('button', { onClick: () => setFilters({ foo: 'bar' }) }, 'Set Filters')
+      ),
+      React.createElement('button', { onClick: handleBatch }, 'Batch Update'),
+      React.createElement('pre', null, location.pathname + location.search)
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(Demo));
+  </script>
+</body>
+</html>
