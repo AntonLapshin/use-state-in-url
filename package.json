@@ -1,15 +1,24 @@
 {
   "name": "use-state-in-url",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "React hook to keep state in URL for deep linking",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antonlapshin/use-state-in-url.git"
+  },
+  "homepage": "https://antonlapshin.github.io/use-state-in-url/",
+  "bugs": {
+    "url": "https://github.com/antonlapshin/use-state-in-url/issues"
+  },
   "scripts": {
     "test": "jest",
     "build": "tsc",
+    "prepublishOnly": "npm run test && npm run build",
     "docs:dev": "cd docs-src && npm run dev",
     "docs:build": "cd docs-src && npm run build"
   },
@@ -17,9 +26,12 @@
     "react",
     "hooks",
     "url",
-    "state"
+    "state",
+    "query-string",
+    "deep-linking",
+    "url-state"
   ],
-  "author": "",
+  "author": "Anton Lapshin",
   "license": "MIT",
   "peerDependencies": {
     "react": ">=17"

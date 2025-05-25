@@ -11,9 +11,9 @@ export type Navigate = (url: string) => void;
 
 type ParamConfig<T> = string | Param<T>;
 
-function normalizeParam<T>(param: ParamConfig<T>, defaultValue: T): Param<T> {
+function normalizeParam<T>(param: ParamConfig<T>): Param<T> {
   return typeof param === "string" 
-    ? { name: param, defaultValue }
+    ? { name: param, defaultValue: "" as T }
     : param;
 }
 
@@ -29,8 +29,7 @@ function getParamValue<T>(
 
 export function useStateInUrl<T>(
   param: ParamConfig<T>,
-  opts: { location: Location; navigate: Navigate },
-  defaultValue?: T
+  opts: { location: Location; navigate: Navigate }
 ): [
   T,
   (value: T) => void,
@@ -38,13 +37,7 @@ export function useStateInUrl<T>(
 ] {
   const { location, navigate } = opts;
   const locationRef = useRef(location);
-  
-  // For string params, defaultValue is optional and defaults to empty string
-  const actualDefault = defaultValue !== undefined 
-    ? defaultValue 
-    : (typeof param === "string" ? "" as T : (param as Param<T>).defaultValue);
-    
-  const config = useRef(normalizeParam(param, actualDefault));
+  const config = useRef(normalizeParam(param));
   
   const getValue = () => {
     const searchParams = parseSearch(location.search);

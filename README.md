@@ -61,13 +61,10 @@ When used with `react-router`, you typically want a wrapper so that `location` a
 import { useNavigate, useLocation } from "react-router-dom";
 import { useStateInUrl, Param } from "use-state-in-url";
 
-export function useStateInRouter<T>(
-  param: string | Param<T>,
-  defaultValue?: T
-) {
+export function useStateInRouter<T>(param: string | Param<T>) {
   const navigate = useNavigate();
   const location = useLocation();
-  return useStateInUrl(param, { navigate: (url) => navigate(url), location }, defaultValue);
+  return useStateInUrl(param, { navigate: (url) => navigate(url), location });
 }
 ```
 

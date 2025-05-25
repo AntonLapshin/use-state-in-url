@@ -233,16 +233,12 @@ const [filters, setFilters] = useStateInUrl(
         <pre className="code-block">{`import { useNavigate, useLocation } from "react-router-dom";
 import { useStateInUrl, Param } from "use-state-in-url";
 
-export function useStateInRouter<T>(
-  param: string | Param<T>,
-  defaultValue?: T
-) {
+export function useStateInRouter<T>(param: string | Param<T>) {
   const navigate = useNavigate();
   const location = useLocation();
   return useStateInUrl(
     param, 
-    { navigate: (url) => navigate(url), location }, 
-    defaultValue
+    { navigate: (url) => navigate(url), location }
   );
 }`}</pre>
 
