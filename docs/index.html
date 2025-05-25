@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>use-state-in-url Demo</title>
+  <style>
+    html, body { margin:0; padding:0; background:#000; color:#ddd; font-family: monospace; scroll-behavior:smooth; }
+    nav { background:#111; padding:0.5rem 1rem; display:flex; justify-content:space-between; position:sticky; top:0; }
+    nav a { color:#ddd; text-decoration:none; margin-right:1rem; }
+    nav a:hover { text-decoration:underline; }
+    section { padding:1rem; }
+    input, button { background:#111; color:#ddd; border:1px solid #555; padding:0.25rem; margin:0.25rem 0; font-family:inherit; }
+    pre { background:#111; padding:1rem; overflow-x:auto; }
+    button { cursor:pointer; }
+    h1 { margin-top:0; color:#ddd; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div>
+      <a href="#demo">Demo</a>
+      <a href="#docs">Docs</a>
+    </div>
+    <div>
+      <a href="https://github.com/">GitHub</a>
+      <a href="https://www.npmjs.com/package/use-state-in-url">npm</a>
+    </div>
+  </nav>
+
+  <section id="demo">
+    <h1 style="font-size:3rem;">useStateInUrl</h1>
+    <div id="app"></div>
+  </section>
+
+  <section id="docs">
+    <h1>Documentation</h1>
+    <pre>
+use-state-in-url is a small React utility that stores state in the
+URL query string. It works like useState but allows your users to
+share deep links and navigate back and forward through application
+state.
+    </pre>
+    <h2>Basic Usage</h2>
+    <pre><code>
+import { useStateInUrl } from 'use-state-in-url';
+
+function Search({ location, navigate }) {
+  const [term, setTerm] = useStateInUrl('term', { location, navigate });
+
+  return (
+    &lt;input value={term} onChange={e =&gt; setTerm(e.target.value)} /&gt;
+  );
+}
+    </code></pre>
+    <h2>Supported Types</h2>
+    <pre><code>
+const [page, setPage] = useStateInUrl&lt;number&gt;({ name: 'page', type: 'number', defaultValue: 1 }, opts);
+const [active, setActive] = useStateInUrl&lt;boolean&gt;({ name: 'active', type: 'boolean', defaultValue: false }, opts);
+const [tags, setTags] = useStateInUrl&lt;string[]&gt;({ name: 'tags', type: 'array', defaultValue: [] }, opts);
+const [filters, setFilters] = useStateInUrl&lt;Record&lt;string, unknown&gt;&gt;({ name: 'filters', type: 'object', defaultValue: {} }, opts);
+    </code></pre>
+    <h2>Creating a Wrapper Hook</h2>
+    <pre><code>
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useStateInUrl } from 'use-state-in-url';
+
+export function useStateInRouter&lt;T&gt;(param: string | StateParam&lt;T&gt;) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return useStateInUrl(param, { navigate: url =&gt; navigate(url), location });
+}
+    </code></pre>
+    <h2>Batch Updates</h2>
+    <pre><code>
+const { batchUpdate } = useBatchUpdate(opts);
+
+const apply = () => {
+  batchUpdate([
+    setTerm('hello'),
+    setPage(2)
+  ]);
+};
+    </code></pre>
+  </section>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
