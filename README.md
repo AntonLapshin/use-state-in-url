@@ -16,31 +16,39 @@ npm install use-state-in-url
 import { useStateInUrl } from "use-state-in-url";
 
 function Search({ location, navigate }) {
+  // String params default to empty string
   const [term, setTerm] = useStateInUrl("term", { location, navigate });
 
   return <input value={term} onChange={(e) => setTerm(e.target.value)} />;
 }
 ```
 
-## Supported Types
+## Type-Safe Parameters with Defaults
 
-The hook can store different types in the URL. Specify the type using a `StateParam` object:
+The type of the parameter is automatically inferred from the `defaultValue`:
 
 ```tsx
-const [page, setPage] = useStateInUrl<number>(
-  { name: "page", type: "number", defaultValue: 1 },
+// Number
+const [page, setPage] = useStateInUrl(
+  { name: "page", defaultValue: 1 },
   { location, navigate }
 );
-const [active, setActive] = useStateInUrl<boolean>(
-  { name: "active", type: "boolean", defaultValue: false },
+
+// Boolean
+const [active, setActive] = useStateInUrl(
+  { name: "active", defaultValue: false },
   { location, navigate }
 );
-const [tags, setTags] = useStateInUrl<string[]>(
-  { name: "tags", type: "array", defaultValue: [] },
+
+// Array
+const [tags, setTags] = useStateInUrl(
+  { name: "tags", defaultValue: [] as string[] },
   { location, navigate }
 );
-const [filters, setFilters] = useStateInUrl<Record<string, unknown>>(
-  { name: "filters", type: "object", defaultValue: {} },
+
+// Object
+const [filters, setFilters] = useStateInUrl(
+  { name: "filters", defaultValue: {} as Record<string, unknown> },
   { location, navigate }
 );
 ```
@@ -51,12 +59,15 @@ When used with `react-router`, you typically want a wrapper so that `location` a
 
 ```tsx
 import { useNavigate, useLocation } from "react-router-dom";
-import { useStateInUrl } from "use-state-in-url";
+import { useStateInUrl, Param } from "use-state-in-url";
 
-export function useStateInRouter<T>(param: string | StateParam<T>) {
+export function useStateInRouter<T>(
+  param: string | Param<T>,
+  defaultValue?: T
+) {
   const navigate = useNavigate();
   const location = useLocation();
-  return useStateInUrl(param, { navigate: (url) => navigate(url), location });
+  return useStateInUrl(param, { navigate: (url) => navigate(url), location }, defaultValue);
 }
 ```
 
@@ -68,15 +79,20 @@ Multiple parameters can be updated at once using `useBatchUpdate`:
 import { useBatchUpdate } from "use-state-in-url";
 
 function Filters({ location, navigate }) {
+  const [term, setTerm, setTermUpdater] = useStateInUrl("term", { location, navigate });
+  const [page, setPage, setPageUpdater] = useStateInUrl(
+    { name: "page", defaultValue: 1 },
+    { location, navigate }
+  );
   const { batchUpdate } = useBatchUpdate({ location, navigate });
 
   const apply = () => {
-    batchUpdate([setTerm("hello"), setPage(2)]);
+    batchUpdate([setTermUpdater("hello"), setPageUpdater(2)]);
   };
 }
 ```
 
-The updater functions returned from `useStateInUrl` can be passed directly to `batchUpdate`.
+The updater functions returned as the third element from `useStateInUrl` can be passed directly to `batchUpdate`.
 
 ## License
 

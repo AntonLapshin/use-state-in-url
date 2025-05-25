@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useStateInUrl, useBatchUpdate, StateParam } from '../src';
+import { useStateInUrl, useBatchUpdate } from '../src';
 
 type Loc = { pathname: string; search: string };
 
@@ -18,7 +18,7 @@ describe('useStateInUrl', () => {
       { initialProps: { loc: location } }
     );
 
-    expect(result.current[0]).toBeUndefined();
+    expect(result.current[0]).toBe('');
 
     act(() => {
       result.current[1]('hello');
@@ -34,10 +34,9 @@ describe('useStateInUrl', () => {
   test('number param with default', () => {
     const navigate = jest.fn();
     let location = createLocation('');
-    const param: StateParam<number> = { name: 'page', type: 'number', defaultValue: 1 };
 
     const { result, rerender } = renderHook(({ loc }) =>
-      useStateInUrl(param, { location: loc, navigate }),
+      useStateInUrl({ name: 'page', defaultValue: 1 }, { location: loc, navigate }),
       { initialProps: { loc: location } }
     );
 
@@ -53,6 +52,50 @@ describe('useStateInUrl', () => {
     rerender({ loc: location });
     expect(result.current[0]).toBe(2);
   });
+
+  test('boolean param', () => {
+    const navigate = jest.fn();
+    let location = createLocation('');
+
+    const { result, rerender } = renderHook(({ loc }) =>
+      useStateInUrl({ name: 'active', defaultValue: false }, { location: loc, navigate }),
+      { initialProps: { loc: location } }
+    );
+
+    expect(result.current[0]).toBe(false);
+
+    act(() => {
+      result.current[1](true);
+    });
+
+    expect(navigate).toHaveBeenCalledWith('/?active=true');
+
+    location = createLocation('?active=true');
+    rerender({ loc: location });
+    expect(result.current[0]).toBe(true);
+  });
+
+  test('array param', () => {
+    const navigate = jest.fn();
+    let location = createLocation('');
+
+    const { result, rerender } = renderHook(({ loc }) =>
+      useStateInUrl({ name: 'tags', defaultValue: [] as string[] }, { location: loc, navigate }),
+      { initialProps: { loc: location } }
+    );
+
+    expect(result.current[0]).toEqual([]);
+
+    act(() => {
+      result.current[1](['a', 'b']);
+    });
+
+    expect(navigate).toHaveBeenCalledWith('/?tags=a,b');
+
+    location = createLocation('?tags=a,b');
+    rerender({ loc: location });
+    expect(result.current[0]).toEqual(['a', 'b']);
+  });
 });
 
 describe('batch update', () => {
@@ -64,7 +107,7 @@ describe('batch update', () => {
       useStateInUrl('q', { location, navigate })
     );
     const { result: page } = renderHook(() =>
-      useStateInUrl<number>({ name: 'page', type: 'number' }, { location, navigate })
+      useStateInUrl({ name: 'page', defaultValue: 0 }, { location, navigate })
     );
     const { result: batch } = renderHook(() =>
       useBatchUpdate({ location, navigate })
@@ -77,6 +120,6 @@ describe('batch update', () => {
       ]);
     });
 
-    expect(navigate).toHaveBeenCalledWith('?q=hello&page=2');
+    expect(navigate).toHaveBeenCalledWith('/?q=hello&page=2');
   });
 });

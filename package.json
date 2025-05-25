@@ -1,6 +1,6 @@
 {
   "name": "use-state-in-url",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "React hook to keep state in URL for deep linking",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,10 +8,10 @@
     "dist"
   ],
   "scripts": {
+    "test": "jest",
     "build": "tsc",
-    "docs:dev": "vite --config docs-src/vite.config.ts",
-    "docs:build": "vite build --config docs-src/vite.config.ts",
-    "test": "jest"
+    "docs:dev": "cd docs-src && npm run dev",
+    "docs:build": "cd docs-src && npm run build"
   },
   "keywords": [
     "react",
@@ -34,8 +34,6 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "ts-jest": "^29.0.0",
-    "typescript": "^5.0.0",
-    "vite": "^4.0.0",
-    "@vitejs/plugin-react": "^4.0.0"
+    "typescript": "^5.0.0"
   }
 }

@@ -1,45 +1,83 @@
 export type ParamType = "string" | "number" | "boolean" | "object" | "array";
 
-export type ValueType = {
-  string: string;
-  number: number;
-  boolean: boolean;
-  object: Record<string, unknown>;
-  array: unknown[];
-};
+export type ParamValue<T extends ParamType> = 
+  T extends "string" ? string :
+  T extends "number" ? number :
+  T extends "boolean" ? boolean :
+  T extends "object" ? Record<string, unknown> :
+  T extends "array" ? unknown[] :
+  never;
 
-export type Deserializer<T extends ParamType> = (value: string) => ValueType[T];
+export type InferParamType<T> = 
+  T extends string ? "string" :
+  T extends number ? "number" :
+  T extends boolean ? "boolean" :
+  T extends unknown[] ? "array" :
+  T extends Record<string, unknown> ? "object" :
+  never;
 
-export interface StateParam<T> {
+export interface Param<T = unknown> {
   name: string;
-  type: ParamType;
-  defaultValue?: T;
-  currentValue?: T;
+  defaultValue: T;
 }
 
-const parseJson = (value: string, fallback: unknown) => {
+function tryParseJson(value: string): unknown {
   try {
     return JSON.parse(value);
-  } catch (error) {
-    console.error("Error parsing JSON:", error);
-    return fallback;
+  } catch {
+    return {};
+  }
+}
+
+export const deserialize = <T>(
+  defaultValue: T,
+  value: string
+): T => {
+  const type = inferType(defaultValue);
+  
+  switch (type) {
+    case "string":
+      return decodeURIComponent(value) as T;
+    case "number":
+      return Number(value) as T;
+    case "boolean":
+      return (value.toLowerCase() === "true") as T;
+    case "object":
+      return tryParseJson(decodeURIComponent(value)) as T;
+    case "array":
+      return value.split(",").map(decodeURIComponent) as T;
+    default:
+      return value as T;
   }
 };
 
-export const Deserializers: { [K in ParamType]: Deserializer<K> } = {
-  string: (value: string) => decodeURIComponent(value),
-  number: (value: string) => Number(value),
-  boolean: (value: string) => value.toLowerCase() === "true",
-  object: (value: string) => parseJson(decodeURIComponent(value), {}),
-  array: (value: string) =>
-    value.split(",").map((v) => decodeURIComponent(v)),
+export const serialize = <T>(
+  defaultValue: T,
+  value: T
+): string => {
+  const type = inferType(defaultValue);
+  
+  switch (type) {
+    case "string":
+      return value as string;
+    case "number":
+      return String(value);
+    case "boolean":
+      return value ? "true" : "false";
+    case "object":
+      return encodeURIComponent(JSON.stringify(value));
+    case "array":
+      return (value as unknown[]).join(",");
+    default:
+      return String(value);
+  }
 };
 
-export const Serializers: { [K in ParamType]: (value: ValueType[K]) => string } = {
-  string: (value: string) => value,
-  number: (value: number) => value.toString(),
-  boolean: (value: boolean) => (value ? "true" : "false"),
-  object: (value: Record<string, unknown>) =>
-    encodeURIComponent(JSON.stringify(value)),
-  array: (value: unknown[]) => value.join(","),
-};
+export function inferType<T>(value: T): InferParamType<T> {
+  if (typeof value === "string") return "string" as InferParamType<T>;
+  if (typeof value === "number") return "number" as InferParamType<T>;
+  if (typeof value === "boolean") return "boolean" as InferParamType<T>;
+  if (Array.isArray(value)) return "array" as InferParamType<T>;
+  if (typeof value === "object" && value !== null) return "object" as InferParamType<T>;
+  return "string" as InferParamType<T>;
+}

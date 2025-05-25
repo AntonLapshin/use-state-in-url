@@ -10,7 +10,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'docs',
+    outDir: '../docs',
     emptyOutDir: true,
   },
+  base: '/use-state-in-url/',
 });
