@@ -58,7 +58,7 @@ export function useStateInUrl<T>(
     (newValue: T | undefined) => (params: SearchParams) => {
       setValue(newValue as T);
       
-      if (newValue === undefined) {
+      if (newValue === undefined || isEqual(newValue, config.current.defaultValue)) {
         params.delete(config.current.name);
       } else {
         const serialized = serialize(config.current.defaultValue, newValue);

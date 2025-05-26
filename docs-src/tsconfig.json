@@ -1,11 +1,21 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
+    "target": "ES2019",
+    "module": "ESNext",
+    "lib": ["ES2019", "DOM"],
     "jsx": "react-jsx",
+    "declaration": false,
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "paths": {
-      "use-state-in-url": ["../src"]
+      "use-state-in-url": ["../dist"]
     }
   },
-  "include": ["src/**/*", "vite.config.ts", "index.html"]
+  "include": ["src/**/*", "vite.config.ts"]
 }

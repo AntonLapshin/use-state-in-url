@@ -78,6 +78,11 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
+.demo-item label input[type="text"],
+.demo-item label input[type="number"] {
+  margin-top: 0.5rem;
+}
+
 .demo-item input[type="text"],
 .demo-item input[type="number"] {
   width: 100%;

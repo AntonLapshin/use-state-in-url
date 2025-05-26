@@ -1,4 +1,4 @@
-import { parseSearch, buildSearch, isEqual } from '../src/urlUtils';
+import { parseSearch, buildSearch, isEqual } from './urlUtils';
 
 describe('parseSearch', () => {
   test('parses empty string', () => {

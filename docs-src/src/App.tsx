@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useStateInUrl, useBatchUpdate } from "use-state-in-url";
 import "./App.css";
 
@@ -78,15 +78,17 @@ function Demo() {
   return (
     <div className="demo-section">
       <h2>Interactive Demo</h2>
-      <p>Try changing the values below and watch the URL update in real-time!</p>
-      
+      <p>
+        Try changing the values below and watch the URL update in real-time!
+      </p>
+
       <div className="demo-grid">
         <div className="demo-item">
           <label>
             Search Term:
-            <input 
+            <input
               type="text"
-              value={String(searchTerm || "")} 
+              value={String(searchTerm || "")}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Type to search..."
             />
@@ -119,10 +121,14 @@ function Demo() {
         <div className="demo-item tags-section">
           <div className="tags-header">
             <span>Tags:</span>
-            <button onClick={handleAddTag} className="btn-small">Add Tag</button>
+            <button onClick={handleAddTag} className="btn-small">
+              Add Tag
+            </button>
           </div>
           <div className="tags-list">
-            {selectedTags.length === 0 && <span className="no-tags">No tags selected</span>}
+            {selectedTags.length === 0 && (
+              <span className="no-tags">No tags selected</span>
+            )}
             {selectedTags.map((tag, index) => (
               <span key={index} className="tag">
                 {tag}
@@ -139,8 +145,10 @@ function Demo() {
         </div>
 
         <div className="demo-item">
-          <button 
-            onClick={() => setFilters({ category: "electronics", brand: "apple" })}
+          <button
+            onClick={() =>
+              setFilters({ category: "electronics", brand: "apple" })
+            }
             className="btn"
           >
             Set Sample Filters
@@ -148,7 +156,9 @@ function Demo() {
           {Object.keys(filters).length > 0 && (
             <div className="filters-display">
               <pre>{JSON.stringify(filters, null, 2)}</pre>
-              <button onClick={() => setFilters({})} className="btn-small">Clear</button>
+              <button onClick={() => setFilters({})} className="btn-small">
+                Clear
+              </button>
             </div>
           )}
         </div>
@@ -157,7 +167,9 @@ function Demo() {
           <button onClick={handleBatchUpdate} className="btn btn-primary">
             Batch Update (Multiple Changes)
           </button>
-          <span className="batch-info">Sets search="hello world", increments page, toggles active</span>
+          <span className="batch-info">
+            Sets search="hello world", increments page, toggles active
+          </span>
         </div>
       </div>
 
@@ -176,12 +188,24 @@ export default function App() {
         <h1>
           <span className="logo">🔗</span> use-state-in-url
         </h1>
-        <p className="subtitle">React hook for managing state in URL query parameters</p>
+        <p className="subtitle">
+          React hook for managing state in URL query parameters
+        </p>
         <div className="badges">
-          <a href="https://github.com/antonlapshin/use-state-in-url" target="_blank" rel="noopener noreferrer" className="badge">
+          <a
+            href="https://github.com/antonlapshin/use-state-in-url"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="badge"
+          >
             GitHub
           </a>
-          <a href="https://www.npmjs.com/package/use-state-in-url" target="_blank" rel="noopener noreferrer" className="badge">
+          <a
+            href="https://www.npmjs.com/package/use-state-in-url"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="badge"
+          >
             npm
           </a>
         </div>
@@ -270,7 +294,14 @@ batchUpdate([
 
       <footer>
         <p>
-          Created with ❤️ by <a href="https://github.com/antonlapshin" target="_blank" rel="noopener noreferrer">Anton Lapshin</a>
+          Created with ❤️ by{" "}
+          <a
+            href="https://github.com/antonlapshin"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Anton Lapshin
+          </a>
         </p>
       </footer>
     </div>
